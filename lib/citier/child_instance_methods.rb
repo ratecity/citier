@@ -3,10 +3,10 @@ module Citier
 
     def save(options={})
       return false if (options[:validate] != false && !self.valid?)
-    
+
       #citier_debug("Callback (#{self.inspect})")
       citier_debug("SAVING #{self.class.to_s}")
-    
+
       #AIT NOTE: Will change any protected values back to original values so any models onwards won't see changes.
       # Run save and create/update callbacks, just like ActiveRecord does
       self.run_callbacks(:save) do
@@ -27,71 +27,73 @@ module Citier
           ########
           #
           # Parent saving
-    
+
           #create a new instance of the superclass, passing the inherited attributes.
           parent = self.class.superclass.new
-      
+
           parent.force_attributes(attributes_for_parent, :merge => true)
           changed_attributes_for_parent["id"] = 0 # We need to change at least something to force a timestamps update.
           parent.force_changed_attributes(changed_attributes_for_parent)
-      
+
           parent.id = self.id if id
           parent.type = self.type
-    
+
           parent.is_new_record(new_record?)
-      
-          # If we're root (AR subclass) this will just be saved as normal through AR. If we're a child it will call this method again. 
+
+          # If we're root (AR subclass) this will just be saved as normal through AR. If we're a child it will call this method again.
           # It will try and save it's parent and then save itself through the Writable constant.
-          parent_saved = parent.save
-          self.id = parent.id
+          parent.transaction do
+            parent_saved = parent.save
+            self.id = parent.id
 
-          if !parent_saved
-            # Couldn't save parent class
-            citier_debug("Class (#{self.class.superclass.to_s}) could not be saved")
-            citier_debug("Errors = #{parent.errors.to_s}")
-            return false # Return false and exit run_callbacks :save and :create/:update, so the after_ callback won't run.
-          end
-    
-          #End of parent saving
-    
-          ######
-          ##
-          ## Self Saving
-          ##
-
-          # If there are attributes for the current class (unique & not inherited), save current model
-          if !attributes_for_current.empty?
-            current = self.class::Writable.new
-        
-            current.force_attributes(attributes_for_current, :merge => true)
-            current.force_changed_attributes(changed_attributes_for_current)
-        
-            current.id = self.id
-            current.is_new_record(new_record?)
-      
-            current_saved = current.save
-            
-            current.after_save_change_request if current.respond_to?('after_save_change_request') #Specific to an app I'm building
-
-            if !current_saved
+            if !parent_saved
+              # Couldn't save parent class
               citier_debug("Class (#{self.class.superclass.to_s}) could not be saved")
-              citier_debug("Errors = #{current.errors.to_s}")
-              return false # Return false and exit run_callbacks :save and :create/:update, so the after callback won't run.
+              citier_debug("Errors = #{parent.errors.to_s}")
+              return false # Return false and exit run_callbacks :save and :create/:update, so the after_ callback won't run.
             end
-          end  
 
-          # at this point, parent_saved && current_saved
-          
-          is_new_record(false) # This is no longer a new record
+            #End of parent saving
 
-          self.force_changed_attributes({}) # Reset changed_attributes so future changes will be tracked correctly
-          
-          # No return, because we want the after callback to run.
+            ######
+            ##
+            ## Self Saving
+            ##
+
+            # If there are attributes for the current class (unique & not inherited), save current model
+            if !attributes_for_current.empty?
+              current = self.class::Writable.new
+
+              current.force_attributes(attributes_for_current, :merge => true)
+              current.force_changed_attributes(changed_attributes_for_current)
+
+              current.id = self.id
+              current.is_new_record(new_record?)
+
+              current_saved = current.save
+
+              current.after_save_change_request if current.respond_to?('after_save_change_request') #Specific to an app I'm building
+
+              if !current_saved
+                citier_debug("Class (#{self.class.superclass.to_s}) could not be saved")
+                citier_debug("Errors = #{current.errors.to_s}")
+                return false # Return false and exit run_callbacks :save and :create/:update, so the after callback won't run.
+              end
+            end
+
+            # at this point, parent_saved && current_saved
+
+            is_new_record(false) # This is no longer a new record
+
+            self.force_changed_attributes({}) # Reset changed_attributes so future changes will be tracked correctly
+
+            # No return, because we want the after callback to run.
+          end
         end
       end
       return true
     end
-  
+
     def save!(options={})
       raise ActiveRecord::RecordInvalid.new(self) if (options[:validate] != false && !self.valid?)
       self.save || raise(ActiveRecord::RecordNotSaved)
