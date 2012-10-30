@@ -12,12 +12,14 @@ module Citier
       self.run_callbacks(:save) do
         self.run_callbacks(self.new_record? ? :create : :update) do
           #get the attributes of the class which are inherited from it's parent.
-          attributes_for_parent = self.attributes.reject { |key,value| !self.class.superclass.column_names.include?(key) }
-          changed_attributes_for_parent = self.changed_attributes.reject { |key,value| !self.class.superclass.column_names.include?(key) }
+          attributes = self.instance_variable_get(:@attributes)
+          changed_attributes = self.instance_variable_get(:@changed_attributes)
+          attributes_for_parent = attributes.reject { |key,value| !self.class.superclass.column_names.include?(key) }
+          changed_attributes_for_parent = changed_attributes.reject { |key,value| !self.class.superclass.column_names.include?(key) }
 
           # Get the attributes of the class which are unique to this class and not inherited.
-          attributes_for_current = self.attributes.reject { |key,value| self.class.superclass.column_names.include?(key) }
-          changed_attributes_for_current = self.changed_attributes.reject { |key,value| self.class.superclass.column_names.include?(key) }
+          attributes_for_current = attributes.reject { |key,value| self.class.superclass.column_names.include?(key) }
+          changed_attributes_for_current = changed_attributes.reject { |key,value| self.class.superclass.column_names.include?(key) }
 
           citier_debug("Attributes for #{self.class.superclass.to_s}: #{attributes_for_parent.inspect}")
           citier_debug("Changed attributes for #{self.class.superclass.to_s}: #{changed_attributes_for_parent.keys.inspect}")

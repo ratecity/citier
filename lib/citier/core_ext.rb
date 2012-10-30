@@ -30,6 +30,13 @@ class ActiveRecord::Base
       # set the name of the table associated to this class
       # this class will be associated to the writable table of the class_reference class
       self.table_name = t_name
+
+      class_attribute :view_class, :writable_serialized_attributes
+      self.view_class = class_reference
+
+      def self.serialized_attributes
+        self.writable_serialized_attributes ||= view_class.serialized_attributes.reject { |key, value| view_class.superclass.column_names.include?(key) }
+      end
     end
   end
 end
