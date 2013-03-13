@@ -20,9 +20,6 @@ require 'citier/root_instance_methods'
 # Methods that will be used for the instances of the Non Root Classes
 require 'citier/child_instance_methods'
 
-# Require SQL Adapters
-require 'citier/sql_adapters'
-
 #Require acts_as_citier hook
 require 'citier/acts_as_citier'
 

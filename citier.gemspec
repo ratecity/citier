@@ -38,8 +38,8 @@ Gem::Specification.new do |s|
   s.rubyforge_project = %q{citier}
   s.rubygems_version = %q{1.3.7}
   s.summary = s.description
-  
-  s.add_dependency('rails_sql_views') #needs the 'rails_sql_views', :git => 'git://github.com/morgz/rails_sql_views.git'  fork. Set this in your apps bundle
+
+  s.add_dependency('rails_sql_views') #needs the 'rails_sql_views', :git => 'https://github.com/ryanlitalien/rails_sql_views.git'  fork. Set this in your apps bundle
 
   if s.respond_to? :specification_version then
     current_version = Gem::Specification::CURRENT_SPECIFICATION_VERSION
