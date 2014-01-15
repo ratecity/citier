@@ -5,6 +5,10 @@ module Citier
     end
     
     module ForcedWriters
+      def or_attributes(new_attributes)
+        new_attributes.each {|k,v| @attributes[k] = v if @attributes[k].nil?}
+      end
+      
       def force_attributes(new_attributes, options = {})
         new_attributes = @attributes.merge(new_attributes) if options[:merge]
         @attributes = new_attributes
