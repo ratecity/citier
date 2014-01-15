@@ -30,7 +30,7 @@ module Citier
         after_initialize do
           if self.new_record?     
             parent = self.class.superclass.new
-            attributes_for_parent = parent.instance_variable_get(:@attributes)
+            attributes_for_parent = parent.instance_variable_get(:@attributes).except('type')
             self.force_attributes(attributes_for_parent, :merge => true)
           
             current = self.class::Writable.new
