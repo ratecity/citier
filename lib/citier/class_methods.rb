@@ -29,6 +29,14 @@ module Citier
         
         after_initialize do
           self.id = nil if self.new_record? && self.id == 0
+          
+          parent = self.class.superclass.new
+          attributes_for_parent = parent.instance_variable_get(:@attributes)
+          self.force_attributes(attributes_for_parent, :merge => true)
+          
+          current = self.class::Writable.new
+          attributes_for_current = current.instance_variable_get(:@attributes)
+          self.force_attributes(attributes_for_current, :merge => true)
         end
 
         # Add the functions required for children only
