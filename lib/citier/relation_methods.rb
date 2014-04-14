@@ -7,7 +7,6 @@ module Citier
         class_eval do
           alias_method_chain :delete_all, :citier
           alias_method_chain :to_a, :citier
-          alias_method_chain :apply_finder_options, :citier
         end
       end
 
