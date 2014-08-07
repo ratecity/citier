@@ -56,16 +56,18 @@ def create_citier_view(theclass)  #function for creating views for migrations
   parent_read_table = theclass.superclass.table_name
   
   # overwrite parent's type column when both tables have type column.
-  type_table        = self_columns.include?('type') ? self_write_table : parent_read_table
-  columns.delete 'type'
+  type_field        = parent_columns.include?('self_type') ? 'self_type' : 'type'
+  self_type_str     = self_columns.include?('type') ? "#{self_read_table}.type" : "''"
+  columns          -= %w(type self_type)
   
-  select_sql        = "SELECT #{parent_read_table}.id, #{type_table}.type, #{columns.map { |c| theclass.connection.quote_column_name(c) }.join(',')} FROM #{parent_read_table}, #{self_write_table} WHERE #{parent_read_table}.id = #{self_write_table}.id"
+  select_sql        = "SELECT #{parent_read_table}.id, #{parent_read_table}.#{type_field}, #{self_type_str}, #{columns.map { |c| theclass.connection.quote_column_name(c) }.join(',')} FROM #{parent_read_table}, #{self_write_table} WHERE #{parent_read_table}.id = #{self_write_table}.id"
   sql               = "CREATE VIEW #{self_read_table} AS #{select_sql}"
 
   #Use our rails_sql_views gem to create the view so we get it outputted to schema
   create_view "#{self_read_table}", select_sql do |v|
     v.column :id
     v.column :type
+    v.column :self_type
     columns.each do |c|
       v.column c.to_sym
     end
