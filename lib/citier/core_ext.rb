@@ -55,9 +55,9 @@ def create_citier_view(theclass)  #function for creating views for migrations
   self_write_table  = theclass::Writable.table_name
   parent_read_table = theclass.superclass.table_name
   
-  # overwrite parent's type column when both tables have type column.
+  # add self_type to memorize current type.
   type_field        = parent_columns.include?('self_type') ? 'self_type' : 'type'
-  self_type_str     = self_columns.include?('type') ? "#{self_read_table}.type" : "''"
+  self_type_str     = self_columns.include?('type') ? "#{self_write_table}.type" : "''"
   columns          -= %w(type self_type)
   
   select_sql        = "SELECT #{parent_read_table}.id, #{parent_read_table}.#{type_field}, #{self_type_str}, #{columns.map { |c| theclass.connection.quote_column_name(c) }.join(',')} FROM #{parent_read_table}, #{self_write_table} WHERE #{parent_read_table}.id = #{self_write_table}.id"
