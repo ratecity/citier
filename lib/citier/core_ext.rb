@@ -65,6 +65,7 @@ def create_citier_view(theclass)  #function for creating views for migrations
   #Use our rails_sql_views gem to create the view so we get it outputted to schema
   create_view "#{self_read_table}", select_sql do |v|
     v.column :id
+    v.column :type
     columns.each do |c|
       v.column c.to_sym
     end
