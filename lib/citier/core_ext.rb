@@ -50,14 +50,16 @@ def create_citier_view(theclass)  #function for creating views for migrations
 
   self_columns      = theclass::Writable.column_names.select{ |c| c != "id" }
   parent_columns    = theclass.superclass.column_names.select{ |c| c != "id" }
-  # overwrite parent's type column when both tables have type column.
-  parent_columns.delete('type') if self_columns.include?('type')
-  
   columns           = parent_columns + self_columns
   self_read_table   = theclass.table_name
   self_write_table  = theclass::Writable.table_name
   parent_read_table = theclass.superclass.table_name
-  select_sql        = "SELECT #{parent_read_table}.id, #{columns.map { |c| theclass.connection.quote_column_name(c) }.join(',')} FROM #{parent_read_table}, #{self_write_table} WHERE #{parent_read_table}.id = #{self_write_table}.id"
+  
+  # overwrite parent's type column when both tables have type column.
+  type_table        = self_columns.include?('type') ? self_write_table : parent_read_table
+  columns.delete 'type'
+  
+  select_sql        = "SELECT #{parent_read_table}.id, #{type_table}.type, #{columns.map { |c| theclass.connection.quote_column_name(c) }.join(',')} FROM #{parent_read_table}, #{self_write_table} WHERE #{parent_read_table}.id = #{self_write_table}.id"
   sql               = "CREATE VIEW #{self_read_table} AS #{select_sql}"
 
   #Use our rails_sql_views gem to create the view so we get it outputted to schema
