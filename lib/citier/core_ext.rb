@@ -49,25 +49,18 @@ def create_citier_view(theclass)  #function for creating views for migrations
   end
 
   self_columns      = theclass::Writable.column_names.select{ |c| c != "id" }
-  parent_columns    = theclass.superclass.column_names.select{ |c| c != "id" }
+  parent_columns    = theclass.superclass.column_names.select{ |c| c != "id" and c != 'type' }
   columns           = parent_columns + self_columns
   self_read_table   = theclass.table_name
   self_write_table  = theclass::Writable.table_name
+  self_class_name   = self_write_table.singularize.classify
   parent_read_table = theclass.superclass.table_name
-  
-  # add self_type to memorize current type.
-  type_field        = parent_columns.include?('self_type') ? 'self_type' : 'type'
-  self_type_str     = self_columns.include?('type') ? "#{self_write_table}.type" : "''"
-  columns          -= %w(type self_type)
-  
-  select_sql        = "SELECT #{parent_read_table}.id, #{parent_read_table}.#{type_field}, #{self_type_str}, #{columns.map { |c| theclass.connection.quote_column_name(c) }.join(',')} FROM #{parent_read_table}, #{self_write_table} WHERE #{parent_read_table}.id = #{self_write_table}.id"
+  select_sql        = "SELECT #{parent_read_table}.id, #{columns.map { |c| theclass.connection.quote_column_name(c) }.join(',')} FROM #{parent_read_table}, #{self_write_table} WHERE #{parent_read_table}.id = #{self_write_table}.id and #{parent_read_table}.type = '#{self_class_name}'"
   sql               = "CREATE VIEW #{self_read_table} AS #{select_sql}"
 
   #Use our rails_sql_views gem to create the view so we get it outputted to schema
   create_view "#{self_read_table}", select_sql do |v|
     v.column :id
-    v.column :type
-    v.column :self_type
     columns.each do |c|
       v.column c.to_sym
     end
