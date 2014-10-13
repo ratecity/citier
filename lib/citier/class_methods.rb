@@ -25,7 +25,7 @@ module Citier
 
         # The the Writable. References the write-able table for the class because
         # save operations etc can't take place on the views
-        self.const_set("Writable", create_class_writable(self))
+        self.const_set("Writable", create_class_writable(self)) unless self.const_defined?(:Writable)
         
         after_initialize do
           if self.new_record?     
@@ -43,7 +43,7 @@ module Citier
         # Add the functions required for children only
         send :include, Citier::ChildInstanceMethods
       else
-      # Root class
+        # Root class
 
         citier_debug("Root Class")
 

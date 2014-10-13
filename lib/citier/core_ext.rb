@@ -19,19 +19,10 @@ class ActiveRecord::Base
   def self.create_class_writable(class_reference)  #creation of a new class which inherits from ActiveRecord::Base
     Class.new(ActiveRecord::Base) do
       include Citier::InstanceMethods::ForcedWriters
-
-      t_name = class_reference.table_name
-
       # set the name of the table associated to this class
       # this class will be associated to the writable table of the class_reference class
-      self.table_name = t_name.gsub(/^view_/, '')
-
-      class_attribute :view_class, :writable_serialized_attributes
-      self.view_class = class_reference
-
-      def self.serialized_attributes
-        self.writable_serialized_attributes ||= class_reference.serialized_attributes.reject { |key, value| class_reference.superclass.column_names.include?(key) }
-      end
+      self.table_name = class_reference.table_name.gsub(/^view_/, '')
+      self.serialized_attributes ||= self.class_reference.serialized_attributes.reject { |key, value| self.class_reference.superclass.column_names.include?(key) }
     end
   end
 end
