@@ -34,7 +34,7 @@ module Citier
           parent = self.class.superclass.new
 
           parent.force_attributes(attributes_for_parent, :merge => true)
-          changed_attributes_for_parent["id"] = 0 # We need to change at least something to force a timestamps update.
+          changed_attributes_for_parent["id"] = nil # We need to change at least something to force a timestamps update.
           parent.force_changed_attributes(changed_attributes_for_parent)
 
           parent.id = self.id if id
